@@ -1,0 +1,49 @@
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Generate some sample data
+x_data = np.random.randn(2000, 3)
+w_real = [0.3, 0.5, 0.1]
+b_real = -0.2
+noise = np.random.randn(1, 2000) * 0.1
+y_data = np.matmul(w_real, x_data.T) + b_real + noise
+
+# Define placeholders for inputs and labels
+x = tf.placeholder(tf.float32, shape=[None, 3])
+y_true = tf.placeholder(tf.float32, shape=None)
+
+# Define the variables to optimize
+W = tf.Variable(tf.zeros([3, 1]))
+b = tf.Variable(tf.zeros([1, 1]))
+
+# Define the model output and loss function
+y_pred = tf.matmul(W, tf.transpose(x)) + b
+loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=y_pred, labels=y_true))
+
+# Define the optimizer and training operation
+learning_rate = 0.5
+optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+train = optimizer.minimize(loss)
+
+# Initialize variables and start session
+init = tf.global_variables_initializer()
+sess = tf.Session()
+sess.run(init)
+
+# Train the model
+for i in range(100):
+    _, loss_val = sess.run([train, loss], feed_dict={x: x_data, y_true: y_data})
+    if i % 10 == 0:
+        print("Step:", i, "Loss:", loss_val)
+
+# Get the learned parameters and make predictions
+w_learned, b_learned = sess.run([W, b])
+y_pred_proba = sess.run(tf.sigmoid(y_pred), feed_dict={x: x_data})
+y_pred_class = sess.run(tf.round(y_pred_proba), feed_dict={x: x_data})
+
+# Plot the results
+plt.scatter(y_data.flatten(), y_pred_proba.flatten())
+plt.xlabel('True Values')
+plt.ylabel('Predictions')
+plt.show()
